@@ -821,7 +821,7 @@ window.Chart = function(context){
 				ctx.strokeStyle = data.datasets[i].strokeColor;
 				ctx.lineWidth = typeof data.datasets[i].strokeWidth !== 'undefined' ? data.datasets[i].strokeWidth : config.datasetStrokeWidth;
 				if (config.scaleLineDash || (typeof data.datasets[i].lineDash && data.datasets[i].lineDash)) {
-					ctx.setLineDash([2,3]);
+					ctx.setLineDash([5,3]);
 				} else {
 					ctx.setLineDash([0]);
 				}
@@ -847,6 +847,7 @@ window.Chart = function(context){
 				else{
 					ctx.closePath();
 				}
+				ctx.setLineDash([0]);
 				if(config.pointDot){
 					ctx.fillStyle = data.datasets[i].pointColor;
 					ctx.strokeStyle = data.datasets[i].pointStrokeColor;
