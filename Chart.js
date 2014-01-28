@@ -292,6 +292,7 @@ window.Chart = function(context){
 			scaleStartValue : null,
 			scaleLineColor : "rgba(0,0,0,.1)",
 			scaleLineWidth : 1,
+			scaleLineDash : false,
 			scaleShowLabels : true,
 			scaleLabel : "<%=value%>",
 			scaleFontFamily : "'Arial'",
@@ -305,6 +306,9 @@ window.Chart = function(context){
 			pointDot : true,
 			pointDotRadius : 4,
 			pointDotStrokeWidth : 2,
+			pointImage: null,
+			pointImageWidth: 20,
+			pointImageHeight: 20,
 			datasetStroke : true,
 			datasetStrokeWidth : 2,
 			datasetFill : true,
@@ -810,14 +814,19 @@ window.Chart = function(context){
 		
 		scaleHop = Math.floor(scaleHeight/calculatedScale.steps);
 		calculateXAxisSize();
-		animationLoop(config,drawScale,drawLines,ctx);		
+		animationLoop(config,drawScale,drawLines,ctx);
 		
 		function drawLines(animPc){
 			for (var i=0; i<data.datasets.length; i++){
 				ctx.strokeStyle = data.datasets[i].strokeColor;
-				ctx.lineWidth = config.datasetStrokeWidth;
+				ctx.lineWidth = typeof data.datasets[i].strokeWidth !== 'undefined' ? data.datasets[i].strokeWidth : config.datasetStrokeWidth;
+				if (config.scaleLineDash || (typeof data.datasets[i].lineDash && data.datasets[i].lineDash)) {
+					ctx.setLineDash([2,3]);
+				} else {
+					ctx.setLineDash([0]);
+				}
 				ctx.beginPath();
-				ctx.moveTo(yAxisPosX, xAxisPosY - animPc*(calculateOffset(data.datasets[i].data[0],calculatedScale,scaleHop)))
+				ctx.moveTo(yAxisPosX, xAxisPosY - animPc*(calculateOffset(getPointValue(data.datasets[i].data[0]),calculatedScale,scaleHop)))
 
 				for (var j=1; j<data.datasets[i].data.length; j++){
 					if (config.bezierCurve){
@@ -843,16 +852,27 @@ window.Chart = function(context){
 					ctx.strokeStyle = data.datasets[i].pointStrokeColor;
 					ctx.lineWidth = config.pointDotStrokeWidth;
 					for (var k=0; k<data.datasets[i].data.length; k++){
-						ctx.beginPath();
-						ctx.arc(yAxisPosX + (valueHop *k),xAxisPosY - animPc*(calculateOffset(data.datasets[i].data[k],calculatedScale,scaleHop)),config.pointDotRadius,0,Math.PI*2,true);
-						ctx.fill();
-						ctx.stroke();
+						if (typeof data.datasets[i].data[k] == 'number') {
+							ctx.beginPath();
+							ctx.arc(yAxisPosX + (valueHop *k),xAxisPosY - animPc*(calculateOffset(getPointValue(data.datasets[i].data[k]),calculatedScale,scaleHop)),config.pointDotRadius,0,Math.PI*2,true);
+							ctx.fill();
+							ctx.stroke();
+						} else if (typeof data.datasets[i].data[k].value == 'number' && (typeof data.datasets[i].data[k].pointImage != 'undefined' || config.pointImage)) {
+							var image = new Image();
+							image.src = data.datasets[i].data[k].pointImage ? data.datasets[i].data[k].pointImage : config.pointImage;
+							ctx.drawImage(
+								image,
+								(yAxisPosX + (valueHop *k)) - (config.pointImageWidth/2),
+								(xAxisPosY - animPc*(calculateOffset(getPointValue(data.datasets[i].data[k]),calculatedScale,scaleHop))) - (config.pointImageHeight/2),
+								config.pointImageWidth, config.pointImageHeight
+							);
+						}
 					}
 				}
 			}
 			
 			function yPos(dataSet,iteration){
-				return xAxisPosY - animPc*(calculateOffset(data.datasets[dataSet].data[iteration],calculatedScale,scaleHop));			
+				return xAxisPosY - animPc*(calculateOffset(getPointValue(data.datasets[dataSet].data[iteration]),calculatedScale,scaleHop));
 			}
 			function xPos(iteration){
 				return yAxisPosX + (valueHop * iteration);
@@ -886,7 +906,7 @@ window.Chart = function(context){
 				}
 				
 				else{
-					ctx.fillText(data.labels[i], yAxisPosX + i*valueHop,xAxisPosY + config.scaleFontSize+3);					
+					ctx.fillText(data.labels[i], yAxisPosX + i*valueHop,xAxisPosY + config.scaleFontSize+3);
 				}
 
 				ctx.beginPath();
@@ -895,11 +915,11 @@ window.Chart = function(context){
 				//Check i isnt 0, so we dont go over the Y axis twice.
 				if(config.scaleShowGridLines && i>0){
 					ctx.lineWidth = config.scaleGridLineWidth;
-					ctx.strokeStyle = config.scaleGridLineColor;					
+					ctx.strokeStyle = config.scaleGridLineColor;
 					ctx.lineTo(yAxisPosX + i * valueHop, 5);
 				}
 				else{
-					ctx.lineTo(yAxisPosX + i * valueHop, xAxisPosY+3);				
+					ctx.lineTo(yAxisPosX + i * valueHop, xAxisPosY+3);
 				}
 				ctx.stroke();
 			}
@@ -997,8 +1017,8 @@ window.Chart = function(context){
 			var lowerValue = Number.MAX_VALUE;
 			for (var i=0; i<data.datasets.length; i++){
 				for (var j=0; j<data.datasets[i].data.length; j++){
-					if ( data.datasets[i].data[j] > upperValue) { upperValue = data.datasets[i].data[j] };
-					if ( data.datasets[i].data[j] < lowerValue) { lowerValue = data.datasets[i].data[j] };
+					if ( getPointValue(data.datasets[i].data[j]) > upperValue) { upperValue = getPointValue(data.datasets[i].data[j]) };
+					if ( getPointValue(data.datasets[i].data[j]) < lowerValue) { lowerValue = getPointValue(data.datasets[i].data[j]) };
 				}
 			};
 	
@@ -1014,8 +1034,15 @@ window.Chart = function(context){
 			
 	
 		}
-
-		
+		// Provide a getter function that can get the value of a point, regardless of the type passed
+		function getPointValue(point) {
+			if (typeof point == 'number') {
+				return point;
+			} else if (typeof point.value == 'number') {
+				return point.value;
+			}
+			return;
+		}
 	}
 	
 	var Bar = function(data,config,ctx){
