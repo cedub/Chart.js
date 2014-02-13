@@ -1326,12 +1326,12 @@ window.Chart = function(context){
       rangeOrderOfMagnitude = calculateOrderOfMagnitude(valueRange);
 
           graphMin = Math.floor(minValue / (1 * Math.pow(10, rangeOrderOfMagnitude))) * Math.pow(10, rangeOrderOfMagnitude);
-            
-            graphMax = Math.ceil(maxValue / (1 * Math.pow(10, rangeOrderOfMagnitude))) * Math.pow(10, rangeOrderOfMagnitude);
-            
-            graphRange = graphMax - graphMin;
-            
-            stepValue = Math.pow(10, rangeOrderOfMagnitude);
+
+          graphMax = Math.ceil(maxValue / (1 * Math.pow(10, rangeOrderOfMagnitude))) * Math.pow(10, rangeOrderOfMagnitude);
+          
+          graphRange = graphMax - graphMin;
+          
+          stepValue = Math.pow(10, rangeOrderOfMagnitude);
             
           numberOfSteps = Math.round(graphRange / stepValue);
           
@@ -1362,7 +1362,6 @@ window.Chart = function(context){
         return Math.floor(Math.log(val) / Math.LN10);
       }   
 
-
   }
 
     //Populate an array of all the labels by interpolating the string.
@@ -1374,7 +1373,7 @@ window.Chart = function(context){
             }
         }
     }
-  
+
   //Max value from array
   function Max( array ){
     return Math.max.apply( Math, array );
