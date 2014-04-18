@@ -820,10 +820,12 @@ window.Chart = function(context){
       for (var i=0; i<data.datasets.length; i++){
         ctx.strokeStyle = data.datasets[i].strokeColor;
         ctx.lineWidth = typeof data.datasets[i].strokeWidth !== 'undefined' ? data.datasets[i].strokeWidth : config.datasetStrokeWidth;
-        if (config.scaleLineDash || (typeof data.datasets[i].lineDash && data.datasets[i].lineDash)) {
-          ctx.setLineDash([5,3]);
-        } else {
-          ctx.setLineDash([1,0]);
+        if (ctx.setLineDash) {
+          if (config.scaleLineDash || (typeof data.datasets[i].lineDash && data.datasets[i].lineDash)) {
+            ctx.setLineDash([5,3]);
+          } else {
+            ctx.setLineDash([1,0]);
+          }
         }
         ctx.beginPath();
         ctx.moveTo(yAxisPosX, xAxisPosY - animPc*(calculateOffset(getPointValue(data.datasets[i].data[0]),calculatedScale,scaleHop)))
@@ -847,7 +849,9 @@ window.Chart = function(context){
         else{
           ctx.closePath();
         }
-        ctx.setLineDash([1,0]);
+        if (ctx.setLineDash) {
+          ctx.setLineDash([1,0]);
+        }
         if(config.pointDot || data.datasets[i].pointDot){
           ctx.fillStyle = data.datasets[i].pointColor;
           ctx.strokeStyle = data.datasets[i].pointStrokeColor;
